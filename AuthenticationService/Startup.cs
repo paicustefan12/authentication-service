@@ -37,18 +37,16 @@ namespace AuthenticationService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddControllers()
-                .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ConnString")));
-            //services.AddControllers().AddJsonOptions(x =>
-            //    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+            services.AddControllers().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
             services.AddTransient<IAuthManager, AuthManager>();
             services.AddTransient<ITokenHelper, TokenHelper>();
+            services.AddTransient<InitialSeed>();
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Lab210", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthenticationService", Version = "v1" });
             });
 
             // identity
@@ -92,14 +90,15 @@ namespace AuthenticationService
             services.AddAuthorization(opt =>
             {
                 opt.AddPolicy("Admin", policy => policy.RequireRole("Admin").RequireAuthenticatedUser().AddAuthenticationSchemes("AuthScheme").Build());
-                opt.AddPolicy("Student", policy => policy.RequireRole("Student").RequireAuthenticatedUser().AddAuthenticationSchemes("AuthScheme").Build());
+                opt.AddPolicy("Employee", policy => policy.RequireRole("Employee").RequireAuthenticatedUser().AddAuthenticationSchemes("AuthScheme").Build());
+                opt.AddPolicy("Manager", policy => policy.RequireRole("Manager").RequireAuthenticatedUser().AddAuthenticationSchemes("AuthScheme").Build());
             });
 
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, InitialSeed initialSeed)
         {
             if (env.IsDevelopment())
             {
@@ -119,6 +118,7 @@ namespace AuthenticationService
                 endpoints.MapControllers();
             });
 
+            initialSeed.CreateRoles();
         }
     }
 }
