@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /src
+ARG token
+COPY ["auth-service/AuthenticationService/AuthenticationService.csproj", "AuthenticationService/"]
+COPY ["auth-service/AuthenticationService.BLL/AuthenticationService.BLL.csproj", "AuthenticationService.BLL/"]
+COPY ["auth-service/AuthenticationService.DAL/AuthenticationService.DAL.csproj", "AuthenticationService.DAL/"]
+RUN dotnet restore "AuthenticationService/AuthenticationService.csproj"
+COPY . .
+WORKDIR "/src/auth-service/AuthenticationService"
+RUN dotnet build "AuthenticationService.csproj" -c Release
+RUN dotnet publish "AuthenticationService.csproj" -c Release -o out
+ENTRYPOINT ["dotnet", "out/AuthenticationService.dll"]
