@@ -29,6 +29,7 @@ namespace AuthenticationService.BLL.Managers
         public async Task<LoginResult> Login(LoginModel loginModel)
         {
             var user = await _userManager.FindByEmailAsync(loginModel.Email);
+            var i = 1;
             if (user == null)
                 return new LoginResult
                 {
